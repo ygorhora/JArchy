@@ -11,6 +11,9 @@ public class JArchyRow {
 		if(headers.size() != list.size())
 			throw new RuntimeException("Headers and content list differ in size.");
 		
+		if(headers.size() != typos.size())
+			throw new RuntimeException("Headers and type list differ in size.");
+		
 		this.columnCell = new HashMap<String, JArchyCell>();
 		
 		for(int i = 0; i < headers.size(); ++i) {

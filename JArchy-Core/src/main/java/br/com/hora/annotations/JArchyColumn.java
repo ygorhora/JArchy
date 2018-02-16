@@ -17,6 +17,6 @@ public @interface JArchyColumn {
 
 	InstanceMethod instanceMethod() default InstanceMethod.DEFAULT;
 
-	Class<? extends ValueRecognition> recognitionMethod() default DefaultValueRecognition.class;
+	// TODO: Class<? extends ValueRecognition> recognitionMethod() default DefaultValueRecognition.class;
 
 }

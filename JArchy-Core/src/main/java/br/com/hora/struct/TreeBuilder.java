@@ -1,20 +1,24 @@
 package br.com.hora.struct;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashSet;
 
-import br.com.hora.annotations.JArchyColumn;
+public class TreeBuilder<T> {
 
-public class TreeBuilder {
-
-	private final Class<?> type;
+	LinkedHashSet<T> nodes = new LinkedHashSet<T>();
+	private final Class<T> type;
 	
-	public TreeBuilder(Class<?> type) {
-		this.type = type;
+	public TreeBuilder(Class<T> type) {
+		this.type = type; //TODO: take at runtime.
 	}
 
-	public void add(JArchyRow row) {		
-		ColumnNode root = new ColumnNode(this.type, row);		
+	public void add(JArchyRow row) {
+		T col = (T) NodeManager.getInstance(this.type, row);
+		T column = ColumnNode.getColumnNode(this.type, row);
+		this.nodes.add(column); // distinct as modeled
+		
 	}
 	
+	public LinkedHashSet<T> getTree(){
+		return this.nodes;
+	}
 }

@@ -23,21 +23,30 @@ public class App {
 		List<String> headers = Arrays.asList(new String[] {"block", "product", "accessibility", "quality", "expiration", "amount"});
 		List<Class<?>> typos = Arrays.asList(new Class<?>[] {String.class, String.class, String.class, String.class, Integer.class, Integer.class});
 		
-		rows.add(Arrays.asList(new String[]{"B1", "EC", "N1", "HI", "30", "1"}));
-		rows.add(Arrays.asList(new String[]{"B1", "PP", "N1", "AL", "10", "2"}));
-		rows.add(Arrays.asList(new String[]{"B1", "PP", "N2", "AL", "20", "3"}));
-		rows.add(Arrays.asList(new String[]{"B2", "EC", "N1", "LW", "30", "1"}));
-		rows.add(Arrays.asList(new String[]{"B2", "EC", "N1", "AL", "30", "2"}));		
+		rows = getRowsTest1();
 		
-		TreeBuilder treeBuilder = new TreeBuilder(Block.class);
+		TreeBuilder<Block> treeBuilder = new TreeBuilder<Block>(Block.class);
 		
 		for(List<String> list : rows) {
 			JArchyRow row = new JArchyRow(headers, typos, list);
 			treeBuilder.add(row);
 		}
 		
+		for(Block b : treeBuilder.getTree()) {
+			System.out.println(b.getCode());
+		}
 		//List<Block> roots = treeBuilder.getRoots();
 		
+	}
+
+	private static List<List<String>> getRowsTest1() {
+		List<List<String>> rows = new ArrayList<List<String>>();
+		rows.add(Arrays.asList(new String[]{"B1", "EC", "N1", "HI", "30", "1"}));
+		rows.add(Arrays.asList(new String[]{"B1", "PP", "N1", "AL", "10", "2"}));
+		rows.add(Arrays.asList(new String[]{"B1", "PP", "N2", "AL", "20", "3"}));
+		rows.add(Arrays.asList(new String[]{"B2", "EC", "N1", "LW", "30", "1"}));
+		//rows.add(Arrays.asList(new String[]{"B2", "EC", "N1", "AL", "30", "2"}));
+		return rows;
 	}
 	
 	
