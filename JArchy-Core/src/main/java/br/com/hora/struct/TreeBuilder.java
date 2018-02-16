@@ -13,15 +13,8 @@ public class TreeBuilder {
 		this.type = type;
 	}
 
-	public void add(JArchyRow row) {
-		JArchyColumn classAnnotation = this.type.getDeclaredAnnotation(JArchyColumn.class);
-		
-		if(classAnnotation == null) {
-			throw new RuntimeException("Annotation JArchyColumn is not defined to class.");
-		}
-		
-		List<String> columns = Arrays.asList(classAnnotation.columns());
-		
+	public void add(JArchyRow row) {		
+		ColumnNode root = new ColumnNode(this.type, row);		
 	}
 	
 }

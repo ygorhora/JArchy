@@ -6,11 +6,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class JArchyCell {
-	Object value;
+	String value;
 	Class<?> type;
 	
-	public JArchyCell(Object object) {
-		this.type = object.getClass();
-		this.value = object;
+	public JArchyCell(String value, Class<?> clazz) {
+		this.value = value;
+		this.type = clazz;
 	}
 }

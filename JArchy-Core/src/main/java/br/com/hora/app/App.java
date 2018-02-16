@@ -18,20 +18,21 @@ import br.com.hora.struct.TreeBuilder;
  */
 public class App {
 	public static void main(String[] args) {
-		ArrayList<List<Object>> rows = new ArrayList<List<Object>>();
+		List<List<String>> rows = new ArrayList<List<String>>();
 		
 		List<String> headers = Arrays.asList(new String[] {"block", "product", "accessibility", "quality", "expiration", "amount"});
+		List<Class<?>> typos = Arrays.asList(new Class<?>[] {String.class, String.class, String.class, String.class, Integer.class, Integer.class});
 		
-		rows.add(Arrays.asList(new Object[]{"B1", "EC", "N1", "HI", 30, 1}));
-		rows.add(Arrays.asList(new Object[]{"B1", "PP", "N1", "AL", 10, 2}));
-		rows.add(Arrays.asList(new Object[]{"B1", "PP", "N2", "AL", 20, 3}));
-		rows.add(Arrays.asList(new Object[]{"B2", "EC", "N1", "LW", 30, 1}));
-		rows.add(Arrays.asList(new Object[]{"B2", "EC", "N1", "AL", 30, 2}));		
+		rows.add(Arrays.asList(new String[]{"B1", "EC", "N1", "HI", "30", "1"}));
+		rows.add(Arrays.asList(new String[]{"B1", "PP", "N1", "AL", "10", "2"}));
+		rows.add(Arrays.asList(new String[]{"B1", "PP", "N2", "AL", "20", "3"}));
+		rows.add(Arrays.asList(new String[]{"B2", "EC", "N1", "LW", "30", "1"}));
+		rows.add(Arrays.asList(new String[]{"B2", "EC", "N1", "AL", "30", "2"}));		
 		
 		TreeBuilder treeBuilder = new TreeBuilder(Block.class);
 		
-		for(List<Object> list : rows) {
-			JArchyRow row = new JArchyRow(headers, list);
+		for(List<String> list : rows) {
+			JArchyRow row = new JArchyRow(headers, typos, list);
 			treeBuilder.add(row);
 		}
 		
