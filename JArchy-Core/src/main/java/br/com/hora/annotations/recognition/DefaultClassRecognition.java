@@ -1,13 +1,10 @@
 package br.com.hora.annotations.recognition;
 
-import java.util.LinkedHashMap;
-
-import br.com.hora.struct.JArchyCell;
+import br.com.hora.struct.JArchyRow;
 
 public class DefaultClassRecognition implements ClassRecognition {
 
-	public boolean isClass(LinkedHashMap<String, JArchyCell> mapColumnCell, String variableName) {
+	public boolean isClass(JArchyRow mapColumnCell, String variableName) {
 		return false;
 	}
-	
 }

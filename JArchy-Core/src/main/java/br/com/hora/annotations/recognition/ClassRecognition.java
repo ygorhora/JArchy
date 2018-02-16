@@ -1,8 +1,6 @@
 package br.com.hora.annotations.recognition;
 
-import java.util.LinkedHashMap;
-
-import br.com.hora.struct.JArchyCell;
+import br.com.hora.struct.JArchyRow;
 
 public interface ClassRecognition {
 	/**
@@ -10,5 +8,5 @@ public interface ClassRecognition {
 	 * @param variableName variable being tested
 	 * @return
 	 */
-	boolean isClass(LinkedHashMap<String, JArchyCell> mapColumnCell, String variableName);
+	public Boolean isClass(JArchyRow mapColumnCell, String variableName);
 }

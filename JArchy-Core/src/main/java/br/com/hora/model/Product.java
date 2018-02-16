@@ -14,4 +14,8 @@ public class Product {
 	String name;
 	
 	List<ProductInformation> listInformation;
+	
+	public String toString() {
+		return this.name;
+	}
 }

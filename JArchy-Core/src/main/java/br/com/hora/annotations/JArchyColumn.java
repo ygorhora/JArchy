@@ -5,8 +5,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import br.com.hora.annotations.recognition.DefaultValueRecognition;
-import br.com.hora.annotations.recognition.ValueRecognition;
 import br.com.hora.enums.InstanceMethod;
 
 @Target({ElementType.TYPE})

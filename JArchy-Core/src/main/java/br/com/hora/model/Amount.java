@@ -1,6 +1,7 @@
 package br.com.hora.model;
 
 import br.com.hora.annotations.JArchyColumn;
+import br.com.hora.annotations.JArchyValue;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,5 +9,10 @@ import lombok.Setter;
 @Setter
 @JArchyColumn(columns = {"amount"})
 public class Amount {
+	@JArchyValue(columns = {"amount"})
 	Integer amount;
+	
+	public String toString() {
+		return this.amount.toString();
+	}
 }

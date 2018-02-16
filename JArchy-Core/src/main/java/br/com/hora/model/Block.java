@@ -21,4 +21,8 @@ public class Block {
 	
 	@JArchyClass(classificationMethod = ProductDestClassification.class)
 	CommerceProduct commerceProduct;
+	
+	public String toString() {
+		return this.code;
+	}
 }

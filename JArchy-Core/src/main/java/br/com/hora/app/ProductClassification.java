@@ -1,15 +1,15 @@
 package br.com.hora.app;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import br.com.hora.annotations.recognition.ClassRecognition;
 import br.com.hora.struct.JArchyCell;
+import br.com.hora.struct.JArchyRow;
 
 public class ProductClassification implements ClassRecognition {
 
-	public boolean isClass(LinkedHashMap<String, JArchyCell> mapColumnCell, String variableName) {
+	public Boolean isClass(JArchyRow mapColumnCell, String variableName) {
 		JArchyCell cell = mapColumnCell.get("product"); // cell used to classify
 		Map<String, String> map = createRuleClassification(); // rule of classification
 		String target = map.get(cell.getValue()); // apply rule to cell value to know target variable

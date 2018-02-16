@@ -19,4 +19,8 @@ public class ProductInformation {
 	String quality;
 	
 	List<Expiration> listExpiration;
+	
+	public String toString() {
+		return this.accessibility + " - " + this.quality;
+	}
 }

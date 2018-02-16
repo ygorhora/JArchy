@@ -4,9 +4,13 @@ import java.util.HashMap;
 
 public class NodeManager {
 
-	private static HashMap<Class<?>, Node> classToNode = new HashMap<Class<?>, Node>();
+	private HashMap<Class<?>, Node> classToNode = new HashMap<Class<?>, Node>();
 	
-	public static Object getInstance(Class<?> type, JArchyRow row) {
+	public NodeManager() {
+		classToNode = new HashMap<Class<?>, Node>();
+	}
+	
+	public Object getInstance(Class<?> type, JArchyRow row) {
 		if (!classToNode.containsKey(type)) {
 			Node node = new Node();
 			Object instance = node.createInstance(row, type);
