@@ -1,24 +1,19 @@
 package br.com.hora.struct;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 
 public class NodeManager {
 
-	private HashMap<Class<?>, Node> classToNode = new HashMap<Class<?>, Node>();
-	
-	public NodeManager() {
-		classToNode = new HashMap<Class<?>, Node>();
-	}
-	
-	public Object getInstance(Class<?> type, JArchyRow row) {
-		if (!classToNode.containsKey(type)) {
-			Node node = new Node();
-			Object instance = node.createInstance(row, type);
-			classToNode.put(type, node);
-			return instance;
+	private HashMap<Object, ChildrenColumnNodeManager> instanceToChildrenColumnNodeManager = new HashMap<Object, ChildrenColumnNodeManager>();
+
+	public void constructTreeBuilderJArchyColumnInstance(Field field, JArchyRow row, Object rootInstance) {
+		if(!this.instanceToChildrenColumnNodeManager.containsKey(rootInstance)) {
+			ChildrenColumnNodeManager childrenColumnNodeManager = new ChildrenColumnNodeManager();
+			this.instanceToChildrenColumnNodeManager.put(rootInstance, childrenColumnNodeManager);
+			childrenColumnNodeManager.constructTreeBuilderJArchyColumnInstance(field, row, rootInstance);
 		} else {
-			Node node = classToNode.get(type);
-			return node.createInstance(row, type);
+			this.instanceToChildrenColumnNodeManager.get(rootInstance).constructTreeBuilderJArchyColumnInstance(field, row, rootInstance);
 		}
 	}
 }

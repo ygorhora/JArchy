@@ -6,7 +6,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -17,162 +16,126 @@ import br.com.hora.annotations.JArchyClass;
 import br.com.hora.annotations.JArchyColumn;
 import br.com.hora.annotations.JArchyValue;
 import br.com.hora.annotations.recognition.ClassRecognition;
-import lombok.experimental.FieldDefaults;
+import br.com.hora.enums.TreeNodeType;
 
 public class TreeBuilder {
-
-	LinkedHashSet<Object> nodes = new LinkedHashSet<Object>();
 	private Class<?> type;
-	private final NodeManager manager = new NodeManager();
-	private Object instance;
-	private HashMap<Object, TreeBuilder> classificationInstancesChilds = new HashMap<Object, TreeBuilder>();
-	private HashMap<String, TreeBuilder> columnInstances = new HashMap<String, TreeBuilder>();
-	private Object lastInstanceInserted;
+	private final ColumnNodeManager columnNodeManager = new ColumnNodeManager();
+	private final ClassNodeManager classNodeManager = new ClassNodeManager();
+	private final NodeManager nodeManager = new NodeManager();
+	private TreeNodeType treeNodeType;
+	private Object originInstance;
+	private LinkedHashSet<Object> setNodes = new LinkedHashSet<Object>();
+	private List<Object> nodes = new ArrayList<Object>();
 
 	public TreeBuilder(Class<?> type) {
+		// TODO: raise exception if type was not annotated with JArchyColumn
+		this(TreeNodeType.COLUMN, null);
 		this.type = type;
 	}
-	
-	private TreeBuilder(Object instance) {
-		this.instance = instance;
+
+	/**
+	 * If tree node type is TreeNodeType.COLUMN origin instance can be null.
+	 * @param type class of root
+	 * @param treeNodeType
+	 * @param originInstance
+	 */
+	public TreeBuilder(TreeNodeType treeNodeType, Object originInstance) {
+		if(originInstance != null)
+			this.type = originInstance.getClass();
+		this.treeNodeType = treeNodeType;
+		this.originInstance = originInstance;
 	}
 
-	public boolean add(JArchyRow row) {
-		Object instance;
-		if(this.instance == null) {
-			// column class
-			instance = this.manager.getInstance(this.type, row);
-		} else {
-			// classification
-			instance = this.instance;
+	public void add(JArchyRow row) {
+		Object rootInstance = null;
+
+		switch (treeNodeType) {
+		case COLUMN:
+			rootInstance = this.columnNodeManager.getInstance(this.type, row);
+			break;
+		case CLASS:
+			rootInstance = this.originInstance;
+			break;
 		}
 
-		setFieldValues(instance, row);
-
-		List<Object> relatedClassificationInstances = createClassificationInstances(instance, row);
-		walkThroughClassification(relatedClassificationInstances, row);
-		
-		createColumnInstances(instance, row);
-		
-		if(this.nodes.contains(instance)){
-			return false;
-		} else {
-			this.nodes.add(instance);
-			this.lastInstanceInserted = instance;
-			return true;
-		}
-	}
-	
-	public Object lastInstanceInserted() {
-		return this.lastInstanceInserted;
+		populateNode(rootInstance, row);
 	}
 
-	private void createColumnInstances(Object instance, JArchyRow row) {
-		List<Field> listFields = getAllListFields(instance);
-		List<Field> columnListFields = filterListFieldsWithColumnAnnotation(listFields);
-		
-		for(Field field: columnListFields) {
-			ParameterizedType param = (ParameterizedType) field.getGenericType();
-			Class<?> clazz = (Class<?>) param.getActualTypeArguments()[0];
-			
-			TreeBuilder subtree;
-			
-			field.setAccessible(true);
-			
-			if(this.columnInstances.containsKey(field.getName())) {
-				subtree = this.columnInstances.get(field.getName());
-				boolean isNew = subtree.add(row);
-				
-				List<Object> list = null;
-				try {
-					list = (List<Object>) field.get(instance);
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				if(isNew) {
-					list.add(subtree.lastInstanceInserted()); // only add to list
-				}
-			} else {
-				subtree = new TreeBuilder(clazz);
-				this.columnInstances.put(field.getName(), subtree);
-				subtree.add(row);
-				
-				LinkedHashSet<Object> children = subtree.getTree(); 
-				
-				// Convert to list of object
-				List<Object> listChildren = new ArrayList<Object>();
-				for(Object child: children) {
-					listChildren.add(child);
-				}
-				
-				try {
-					if(listChildren.size() > 0) {
-						field.set(instance, listChildren); // create list for field
-					}
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} // field is a List
-			}
+	private void populateNode(Object rootInstance, JArchyRow row) {
+		setJArchyValueFields(rootInstance, row);
+
+		constructTreeBuilderForJArchyClassInstances(rootInstance, row);
+
+		constructJArchyColumnInstances(rootInstance, row);
+
+		if (!this.setNodes.contains(rootInstance)) {
+			this.setNodes.add(rootInstance);
+			this.nodes.add(rootInstance);
 		}
 	}
 
-	private List<Field> filterListFieldsWithColumnAnnotation(List<Field> listFields) {
+	private void constructJArchyColumnInstances(Object rootInstance, JArchyRow row) {
+		List<Field> listJArchyColumnFields = getJArchyColumnFieldsList(rootInstance);
+
+		for (Field field : listJArchyColumnFields) {
+			this.nodeManager.constructTreeBuilderJArchyColumnInstance(field, row, rootInstance);
+		}
+	}
+
+	private List<Field> getJArchyColumnFieldsList(Object rootInstance) {
+		List<Field> listFields = getAllListFields(rootInstance);
+		return filterListFieldsWithJArchyColumn(listFields);
+	}
+
+	private List<Field> filterListFieldsWithJArchyColumn(List<Field> listFields) {
 		List<Field> columnListFields = new ArrayList<Field>();
-		for(Field field: listFields) {
-			ParameterizedType param = (ParameterizedType) field.getGenericType();
-			Class<?> clazz = (Class<?>) param.getActualTypeArguments()[0];
-			if(clazz.getDeclaredAnnotation(JArchyColumn.class) != null) {
+		for (Field field : listFields) {
+			Class<?> type = getListType(field);
+			if (type.getDeclaredAnnotation(JArchyColumn.class) != null) {
 				columnListFields.add(field);
 			}
 		}
 		return columnListFields;
 	}
 
+	private Class<?> getListType(Field field) {
+		ParameterizedType param = (ParameterizedType) field.getGenericType();
+		return (Class<?>) param.getActualTypeArguments()[0];
+	}
+
 	private List<Field> getAllListFields(Object instance) {
 		List<Field> allFields = Arrays.asList(instance.getClass().getDeclaredFields());
 		List<Field> listFields = new ArrayList<Field>();
-		for(Field field: allFields) {
-			if(field.getType() == List.class) {
+		for (Field field : allFields) {
+			if (field.getType() == List.class) {
 				listFields.add(field);
 			}
 		}
 		return listFields;
 	}
 
-	private void walkThroughClassification(List<Object> relatedClassificationInstances, JArchyRow row) {
-		for(Object instance : relatedClassificationInstances) {
-			try {
-				if(classificationInstancesChilds.containsKey(instance)) {
-					classificationInstancesChilds.get(instance).add(row);
-				} else {
-					TreeBuilder subtree = new TreeBuilder(instance);
-					classificationInstancesChilds.put(instance, subtree);
-					subtree.add(row);
-				}				
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	private void constructTreeBuilderForJArchyClassInstances(Object rootInstance, JArchyRow row) {
+		List<Object> instancesJArchyClassInRootInstance = getJArchyClassFieldsInstances(rootInstance, row);
+		
+		for (Object instanceJArchyClass : instancesJArchyClassInRootInstance) {
+			TreeBuilder treeOfJArchyClassInstance = this.classNodeManager.getTree(instanceJArchyClass);
+			treeOfJArchyClassInstance.add(row);
 		}
 	}
 
+	/**
+	 * Get all instances of field marked as JArchyClass related to row. Create
+	 * instance if necessary.
+	 */
+	private List<Object> getJArchyClassFieldsInstances(Object rootInstance, JArchyRow row) {
+		List<Field> fieldsToLink = FieldUtils.getFieldsListWithAnnotation(rootInstance.getClass(), JArchyClass.class);
+		List<Object> instancesJArchyClassInRootInstance = new ArrayList<Object>();
 
-	private List<Object> createClassificationInstances(Object instance, JArchyRow row) {
-		List<Field> fieldsToLink = FieldUtils.getFieldsListWithAnnotation(instance.getClass(), JArchyClass.class);
-		List<Object> classificationInstances = new ArrayList<Object>();
-		
 		for (Field field : fieldsToLink) {
 			Class<? extends ClassRecognition> classificationClass = getClassificationMethod(field);
 			String variableName = field.getName();
+			field.setAccessible(true);
 			Method classificationMethod = null;
 
 			try {
@@ -207,8 +170,7 @@ public class TreeBuilder {
 			Object fieldValue = null;
 
 			try {
-				field.setAccessible(true);
-				fieldValue = field.get(instance);
+				fieldValue = field.get(rootInstance);
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -218,21 +180,29 @@ public class TreeBuilder {
 			}
 
 			if (belong) {
-				if(fieldValue == null) {
-					classificationInstances.add(createNewClassificationInstance(instance, field));
+				if (fieldValue == null) {
+					instancesJArchyClassInRootInstance.add(createJArchyClassInstance(rootInstance, field));
 				} else {
-					classificationInstances.add(fieldValue);
+					instancesJArchyClassInRootInstance.add(fieldValue);
 				}
 			}
 		}
-		
-		return classificationInstances;
+
+		return instancesJArchyClassInRootInstance;
 	}
 
-	private Object createNewClassificationInstance(Object instance, Field field) {
+	/**
+	 * @param rootInstance
+	 *            instance that contains field
+	 * @param field
+	 *            acessible field
+	 * @return
+	 */
+	private Object createJArchyClassInstance(Object rootInstance, Field field) {
 		Object newClassificationInstance = null;
 		try {
 			newClassificationInstance = field.getType().newInstance();
+			field.set(rootInstance, newClassificationInstance);
 		} catch (InstantiationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -241,17 +211,6 @@ public class TreeBuilder {
 			e.printStackTrace();
 		}
 
-		try {
-			field.setAccessible(true);
-			field.set(instance, newClassificationInstance);
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		return newClassificationInstance;
 	}
 
@@ -263,8 +222,9 @@ public class TreeBuilder {
 	/**
 	 * Set value for all fields annotated with JArchyValue.
 	 */
-	private void setFieldValues(Object instance, JArchyRow row) {
-		List<Field> fieldsToSetValue = FieldUtils.getFieldsListWithAnnotation(instance.getClass(), JArchyValue.class);
+	private void setJArchyValueFields(Object rootInstance, JArchyRow row) {
+		List<Field> fieldsToSetValue = FieldUtils.getFieldsListWithAnnotation(rootInstance.getClass(),
+				JArchyValue.class);
 
 		for (Field field : fieldsToSetValue) {
 			List<String> columns = getColumnsForField(field);
@@ -275,7 +235,7 @@ public class TreeBuilder {
 			} else if (columns.size() == 1) {
 				String column = columns.get(0);
 				JArchyCell cell = row.get(column);
-				setFieldValue(instance, field, cell);
+				setFieldValue(rootInstance, field, cell);
 			}
 		}
 	}
@@ -310,7 +270,10 @@ public class TreeBuilder {
 		return Arrays.asList(annotation.columns());
 	}
 
-	public LinkedHashSet<Object> getTree() {
+	/**
+	 * @return a list of nodes.
+	 */
+	public List<Object> getTree() {
 		return this.nodes;
 	}
 }

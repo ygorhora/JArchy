@@ -9,19 +9,18 @@ import com.google.common.collect.Multimap;
 
 import br.com.hora.annotations.JArchyColumn;
 
-public class Node {
+public class ColumnNodeManager {
 	private Multimap<List<String>, Object> identifierToInstance;
 
-	public Node() {
+	public ColumnNodeManager() {
 		this.identifierToInstance = ArrayListMultimap.create();
 	}
 
-	public Object createInstance(JArchyRow row, Class<?> type) {
-
+	public Object getInstance(Class<?> type, JArchyRow row) {
 		JArchyColumn columnAnnotation = type.getDeclaredAnnotation(JArchyColumn.class);
 		List<String> identifier = getIdentifier(columnAnnotation, row);
 		Object instance = null;
-
+		
 		try {
 			switch (columnAnnotation.instanceMethod()) {
 			case ALL_DISTINCT:
