@@ -1,12 +1,11 @@
-package br.com.hora.app;
+package br.com.hora.model.recognition;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import br.com.hora.annotations.recognition.ClassRecognition;
 import br.com.hora.struct.JArchyCell;
 import br.com.hora.struct.JArchyRow;
+import br.com.hora.struct.annotations.recognition.ClassRecognition;
 
 public class ProductDestClassification implements ClassRecognition {
 
