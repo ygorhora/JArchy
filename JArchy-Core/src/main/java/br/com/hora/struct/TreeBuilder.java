@@ -1,5 +1,6 @@
 package br.com.hora.struct;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -12,11 +13,12 @@ import java.util.List;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-import br.com.hora.annotations.JArchyClass;
-import br.com.hora.annotations.JArchyColumn;
-import br.com.hora.annotations.JArchyValue;
-import br.com.hora.annotations.recognition.ClassRecognition;
-import br.com.hora.enums.TreeNodeType;
+import br.com.hora.struct.annotations.JArchyClass;
+import br.com.hora.struct.annotations.JArchyColumn;
+import br.com.hora.struct.annotations.JArchyPostProcessing;
+import br.com.hora.struct.annotations.JArchyValue;
+import br.com.hora.struct.annotations.recognition.ClassRecognition;
+import br.com.hora.struct.enums.TreeNodeType;
 
 public class TreeBuilder {
 	private Class<?> type;
@@ -133,7 +135,7 @@ public class TreeBuilder {
 		List<Object> instancesJArchyClassInRootInstance = new ArrayList<Object>();
 
 		for (Field field : fieldsToLink) {
-			Class<? extends ClassRecognition> classificationClass = getClassificationMethod(field);
+			Class<? extends ClassRecognition> classificationClass = getClassificationClass(field);
 			String variableName = field.getName();
 			field.setAccessible(true);
 			Method classificationMethod = null;
@@ -214,7 +216,7 @@ public class TreeBuilder {
 		return newClassificationInstance;
 	}
 
-	private Class<? extends ClassRecognition> getClassificationMethod(Field field) {
+	private Class<? extends ClassRecognition> getClassificationClass(Field field) {
 		JArchyClass annotation = field.getDeclaredAnnotation(JArchyClass.class);
 		return annotation.classificationMethod();
 	}
@@ -275,5 +277,114 @@ public class TreeBuilder {
 	 */
 	public List<Object> getTree() {
 		return this.nodes;
+	}
+
+	public void postProcessing() {
+		for(Object instance: this.nodes) {
+			postProcessing(instance);
+		}
+	}
+	
+	private void postProcessing(Object instance) {
+		List<Object> neighboringInstances = getNeighboringInstances(instance);
+		
+		for(Object neighboringInstance : neighboringInstances) {
+			postProcessing(neighboringInstance);
+		}
+		
+		applyPostProcessing(instance);
+	}
+
+	private void applyPostProcessing(Object instance) {
+		for(Method method: getMethodsAnnotatedWith(instance, JArchyPostProcessing.class)) {
+			method.setAccessible(true);
+			try {
+				method.invoke(instance);
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private static List<Method> getMethodsAnnotatedWith(Object instance, Class<? extends Annotation> annotation) {
+	    final List<Method> methods = new ArrayList<Method>();
+	    Class<?> type = instance.getClass();
+	    
+        List<Method> allMethods = new ArrayList<Method>(Arrays.asList(type.getDeclaredMethods()));       
+        for (final Method method : allMethods) {
+            if (method.isAnnotationPresent(annotation)) {
+                // Annotation annotInstance = method.getAnnotation(annotation);
+                // TODO process annotInstance
+                methods.add(method);
+            }
+        }
+	    return methods;
+	}
+
+	private List<Object> getNeighboringInstances(Object instance) {
+		List<Object> neighboringInstances = new ArrayList<Object>();
+		neighboringInstances.addAll(getNeighboringInstancesJArchyClass(instance));
+		neighboringInstances.addAll(getNeighboringInstancesJArchyColumn(instance));
+		return neighboringInstances;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private List<Object> getNeighboringInstancesJArchyColumn(Object instance) {
+		List<Object> neighboringInstancesJArchyColumn = new ArrayList<Object>();
+		
+		List<Field> fieldsJArchyColumn = getJArchyColumnFieldsList(instance);
+		
+		for(Field field: fieldsJArchyColumn) {
+			field.setAccessible(true);
+			Object fieldValue = null;
+			try {
+				fieldValue = field.get(instance);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if(fieldValue != null) {
+				neighboringInstancesJArchyColumn.addAll((List<Object>) fieldValue); 
+			}
+		}
+
+		return neighboringInstancesJArchyColumn;
+	}
+
+	private List<Object> getNeighboringInstancesJArchyClass(Object instance) {
+		List<Object> neighboringInstancesJArchyClass = new ArrayList<Object>();
+		
+		List<Field> fieldsJArchyClass = FieldUtils.getFieldsListWithAnnotation(instance.getClass(), JArchyClass.class);
+		
+		for(Field field: fieldsJArchyClass) {
+			field.setAccessible(true);
+			Object fieldValue = null;
+			try {
+				fieldValue = field.get(instance);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if(fieldValue != null) {
+				neighboringInstancesJArchyClass.add(fieldValue);
+			}
+		}
+		
+		return neighboringInstancesJArchyClass;
 	}
 }

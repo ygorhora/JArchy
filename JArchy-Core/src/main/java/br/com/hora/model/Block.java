@@ -1,10 +1,10 @@
 package br.com.hora.model;
 
-import br.com.hora.annotations.JArchyClass;
-import br.com.hora.annotations.JArchyColumn;
-import br.com.hora.annotations.JArchyValue;
-import br.com.hora.app.ProductDestClassification;
-import br.com.hora.enums.InstanceMethod;
+import br.com.hora.model.recognition.ProductDestClassification;
+import br.com.hora.struct.annotations.JArchyClass;
+import br.com.hora.struct.annotations.JArchyColumn;
+import br.com.hora.struct.annotations.JArchyValue;
+import br.com.hora.struct.enums.InstanceMethod;
 import lombok.Getter;
 import lombok.Setter;
 

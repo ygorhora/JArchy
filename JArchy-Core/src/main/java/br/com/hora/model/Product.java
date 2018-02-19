@@ -2,7 +2,7 @@ package br.com.hora.model;
 
 import java.util.List;
 
-import br.com.hora.annotations.JArchyValue;
+import br.com.hora.struct.annotations.JArchyValue;
 import lombok.Getter;
 import lombok.Setter;
 

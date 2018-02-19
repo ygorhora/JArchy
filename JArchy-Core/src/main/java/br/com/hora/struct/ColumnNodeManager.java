@@ -7,7 +7,7 @@ import java.util.List;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
-import br.com.hora.annotations.JArchyColumn;
+import br.com.hora.struct.annotations.JArchyColumn;
 
 public class ColumnNodeManager {
 	private Multimap<List<String>, Object> identifierToInstance;

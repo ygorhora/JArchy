@@ -2,7 +2,7 @@ package br.com.hora.struct;
 
 import java.util.HashMap;
 
-import br.com.hora.enums.TreeNodeType;
+import br.com.hora.struct.enums.TreeNodeType;
 
 public class ClassNodeManager {
 	private HashMap<Object, TreeBuilder> classificationInstancesChilds = new HashMap<Object, TreeBuilder>();
